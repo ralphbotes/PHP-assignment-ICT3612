@@ -1,0 +1,758 @@
+////////////////////////////// controller: index.php //////////////////////////
+<?php
+    require('../model/database.php');
+    require('../model/contestants_db.php');
+    require('../model/winners_db.php');
+
+    $action = filter_input(INPUT_POST, 'action');
+    if ($action == NULL) {
+        $action = filter_input(INPUT_GET, 'action');
+        if ($action == NULL) {
+            $action = 'list_contestants';
+        }
+    }
+    //----------------------------Contestants section--------------------------------
+    if ($action == 'list_contestants') {        // list_contestants action
+        $contestants = getContestants();
+        include('../view/contestant_list.php');         // contestant_list view
+    } else if ($action == 'show_add_contestant_form') {    // show_add_form action
+        include('../view/contestant_add.php');          // add_contestant form
+    } else if ($action == 'add_contestant') {   // 
+        // Get data from fields
+        $ContestantID = trim($_POST["contestant_id"]);
+        $FirstName = trim($_POST["first_name"]);
+        $LastName = trim($_POST["last_name"]);
+        $Email = trim($_POST["email"]);
+        $Tel = trim($_POST["tel"]);
+
+        // Check if all valid
+        // Validate ContestantID
+        if(empty($ContestantID)){
+            echo("Please enter a contestant id. " . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!preg_match('/^[0-9]{13}+$/', $ContestantID)){
+            echo("Please enter a valid contestant id of 13 numbers. " . '<a href="javascript:history.back()">Try again</a>');
+        } 
+
+        // Validate FirstName
+        else if(empty($FirstName)){
+            echo("Please enter a first name. " . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!filter_var($FirstName, FILTER_VALIDATE_REGEXP, array("options"=>array("regexp"=>"/^[a-zA-Z\s]+$/")))){
+            echo("Please enter a valid first name. Only alphabetic characters accepted. " . '<a href="javascript:history.back()">Try again</a>');
+        } 
+        
+        // Validate LastName
+        else if(empty($LastName)){
+            echo("Please enter a last name." . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!filter_var($LastName, FILTER_VALIDATE_REGEXP, array("options"=>array("regexp"=>"/^[a-zA-Z\s]+$/")))){
+            echo("Please enter a valid last name. Only alphabetic characters accepted. " . '<a href="javascript:history.back()">Try again</a>');
+        }
+
+        // Validate Tel
+        else if(empty($Tel)){
+            echo("Please enter a telephone number." . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!preg_match('/^[0-9]{10}+$/', $Tel)){
+            echo("Please enter a valid telephone number. Only 10 numeric characters accepted. " . '<a href="javascript:history.back()">Try again</a>');
+        }
+
+        // Validate Email
+        else if(empty($Email)){
+            echo("Please enter a email." . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!filter_var($Email, FILTER_VALIDATE_EMAIL)){
+            echo("Please enter a valid email." . '<a href="javascript:history.back()">Try again</a>');
+        } else {
+            $result = addContestant($ContestantID,$Email,$FirstName,$LastName,$Tel);
+            if ($result == true) {
+                header("Location: .?contestant_id=$ContestantID");
+            } else {
+                echo("Contestant already exists." . '<a href="javascript:history.back()">Try again</a>');
+            }
+        }
+    }  else if($action == 'delete_contestant') {
+        $ContestantID = filter_input(INPUT_POST,'contestant_id');
+        if ($ContestantID == NULL) {
+            echo("Error. Could not delete contestant.");
+        } else {
+            deleteContestant($ContestantID);
+            header("Location: .?contestant_id=$ContestantID");
+        }
+    }  else if($action == 'modify_contestant_form') {
+        // Get hidden input value
+        $ContestantID = $_POST["contestant_id"];
+
+        $FirstName = trim($_POST["first_name"]);
+        $LastName = trim($_POST["last_name"]);
+        $Email = trim($_POST["email"]);
+        $Tel = trim($_POST["tel"]);
+
+        // Validate FirstName
+        if(empty($FirstName)){
+            echo("Please enter a first name." . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!filter_var($FirstName, FILTER_VALIDATE_REGEXP, array("options"=>array("regexp"=>"/^[a-zA-Z\s]+$/")))){
+            echo("Please enter a valid first name. Only alphabetic characters accepted. " . '<a href="javascript:history.back()">Try again</a>');
+        } 
+        
+        // Validate LastName
+        else if(empty($LastName)){
+            echo("Please enter a last name." . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!filter_var($LastName, FILTER_VALIDATE_REGEXP, array("options"=>array("regexp"=>"/^[a-zA-Z\s]+$/")))){
+            echo("Please enter a valid last name. Only alphabetic characters accepted. " . '<a href="javascript:history.back()">Try again</a>');
+        }
+
+        // Validate Tel
+        else if(empty($Tel)){
+            echo("Please enter a telephone number." . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!preg_match('/^[0-9]{10}+$/', $Tel)){
+            echo("Please enter a valid telephone number. Only 10 numeric characters accepted. " . '<a href="javascript:history.back()">Try again</a>');
+        }
+
+        // Validate Email
+        else if(empty($Email)){
+            echo("Please enter a email." . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!filter_var($Email, FILTER_VALIDATE_EMAIL)){
+            echo("Please enter a valid email." . '<a href="javascript:history.back()">Try again</a>');
+        }
+
+        else {
+            $result = modifyContestant($ContestantID,$Email,$FirstName,$LastName,$Tel);
+            if ($result == true) {
+                header("Location: .?contestant_id=$ContestantID");
+            } else {
+                echo("An error occurred while writing contestant updated data to the database." . '<a href="javascript:history.back()">Try again</a>');
+            }
+        }
+    }  else if($action == 'modify_contestant') {
+        $ContestantID = filter_input(INPUT_POST,'contestant_id');
+        include('../view/contestant_modify.php');
+    }
+    //----------------------------Winners section--------------------------------
+    else if ($action == 'list_winners') {        // list_winners action
+        $Winners = getWinners();
+        include('../view/winners_list.php');         // winners_list view
+    } else if ($action == 'show_add_winner_form') {    // show_add_winner_form action
+        include('../view/winner_add.php');          // winner_add form
+    } else if ($action == 'add_winner') {   // 
+        // Get data from fields
+        $ContestantID = trim($_POST["contestant_id"]);
+        $WinYear = trim($_POST["win_year"]);
+        $WinningPoints = trim($_POST["winning_points"]);
+
+        // Check if all valid
+        // Validate ContestantID
+        if(empty($ContestantID)){
+            echo("Please enter a contestant id. " . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!preg_match('/^[0-9]{13}+$/', $ContestantID)){
+            echo("Please enter a valid contestant id of 13 numbers. " . '<a href="javascript:history.back()">Try again</a>');
+        }
+
+        // Validate WinningPoints
+        else if(empty($WinningPoints)){
+            echo("Please enter the winning points." . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!preg_match('/^[0-9]+$/', $WinningPoints)){
+            echo("Please enter valid winning points. Only numeric characters accepted. " . '<a href="javascript:history.back()">Try again</a>');
+        }
+
+        // Validate WinYear
+        else if(empty($WinYear)){
+            echo("Please enter the win year." . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!preg_match('/^[0-9]{4}+$/', $WinYear)){
+            echo("Please enter a valid win year. Only 4 numeric characters accepted. " . '<a href="javascript:history.back()">Try again</a>');
+        }
+
+        // Validate year not already used
+        else if(!empty(checkWinnerYear($WinYear))){
+            echo("This year has an assigned winner. Choose a new year. " . '<a href="javascript:history.back()">Try again</a>');
+        }
+
+        // Validate Winner not in waiting period
+        // Pass -1 as $WinnerID to checkWinner() to indicate no new winner
+        else if(!empty(checkWinner(-1,$ContestantID,$WinYear))){
+            echo("Winner has won in last 5 years, choose runner-up. " . '<a href="javascript:history.back()">Try again</a>');
+        }
+
+        else {
+            $result = setWinner($ContestantID,$WinningPoints,$WinYear);
+            if ($result == true) {
+                header("Location: .?action=list_winners");
+            } else {
+                echo("Error adding winner." . '<a href="javascript:history.back()">Try again</a>');
+            }
+        }
+    }  else if($action == 'delete_winner') {
+        $WinnerID = filter_input(INPUT_POST,'winner_id');
+        if ($WinnerID == NULL) {
+            echo("Error. Could not delete winner.");
+        } else {
+            deleteWinner($WinnerID);
+            header("Location: .?action=list_winners");
+        }
+    } else if ($action == 'modify_winner_form') {   // 
+        // Get data from fields
+        $WinnerID = trim($_POST["winner_id"]);
+        $ContestantID = trim($_POST["contestant_id"]);
+        $WinYear = trim($_POST["win_year"]);
+        $WinningPoints = trim($_POST["winning_points"]);
+
+        // Check if all valid
+        // Validate ContestantID
+        if(empty($ContestantID)){
+            echo("Please enter a contestant id. " . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!preg_match('/^[0-9]{13}+$/', $ContestantID)){
+            echo("Please enter a valid contestant id of 13 numbers. " . '<a href="javascript:history.back()">Try again</a>');
+        }
+
+        // Validate WinYear
+        else if(empty($WinYear)){
+            echo("Please enter the win year." . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!preg_match('/^[0-9]{4}+$/', $WinYear)){
+            echo("Please enter a valid win year. Only 4 numeric characters accepted. " . '<a href="javascript:history.back()">Try again</a>');
+        }
+
+        // Validate WinningPoints
+        else if(empty($WinningPoints)){
+            echo("Please enter the winning points." . '<a href="javascript:history.back()">Try again</a>');
+        } else if(!preg_match('/^[0-9]+$/', $WinningPoints)){
+            echo("Please enter valid winning points. Only numeric characters accepted. " . '<a href="javascript:history.back()">Try again</a>');
+        }
+
+        // Check if winner details clash
+        else if(checkUpdatedWinner($WinnerID,$WinYear) <> true) {
+            // Winner exists, check if winner has won in the past 5 years
+            echo("Winner has won in the past 5 years. Still in waiting period. Select a new winner. " . '<a href="javascript:history.back()">Try again</a>');
+        }
+
+        // Validate Winner not in waiting period
+        else if(checkWinner($WinnerID,$ContestantID,$WinYear,true) != Null){
+            echo(checkWinner($WinnerID,$ContestantID,$WinYear,true));
+        }
+        
+        else {
+
+            $result = modifyWinner($WinnerID,$ContestantID,$WinningPoints,$WinYear);
+            if ($result == true) {
+                header("Location: .?action=list_winners");
+            } else {
+                echo("An error occurred while writing winner updated data to the database." . '<a href="javascript:history.back()">Try again</a>');
+            }
+        }
+    }  else if($action == 'modify_winner') {
+        $WinnerID = filter_input(INPUT_POST,'winner_id');
+        include('../view/winner_modify.php');
+    }
+?>
+
+////////////////////////////// model: contestants_db.php //////////////////////////
+<?php
+    function getContestants() {
+        // Returns an array of contestantID's
+        global $db;
+        $query = 'SELECT * FROM Contestant';
+		$statement = $db->prepare($query);
+		$statement->execute();
+		$contestants = $statement->fetchAll();
+		$statement->closeCursor();
+		return $contestants;
+    }
+
+    function getContestant($contestantID) {
+        // Returns a contestant if one exists
+        global $db;
+        $query = 'SELECT * FROM Contestant WHERE ContestantID = :contestantID';
+		$statement = $db->prepare($query);
+        $statement->bindValue(':contestantID', $contestantID);
+		$statement->execute();
+		$contestant = $statement->fetch();
+		$statement->closeCursor();
+		return $contestant;
+    }
+
+    function addContestant($contestantID,$Email,$FirstName,$LastName,$Tel) {
+        // Registers a new contestant
+        global $db;
+
+        // First check if already in database
+        $query = 'SELECT * FROM Contestant WHERE ContestantID = :contestantID';
+		$statement = $db->prepare($query);
+        $statement->bindValue(':contestantID', $contestantID);
+		$statement->execute();
+		$contestant = $statement->fetch();
+		$statement->closeCursor();
+		$result = $contestant;
+        if ($result != Null) {
+            return false;
+        } else {
+            $query = "INSERT INTO Contestant(ContestantID,FirstName,LastName,Tel,Email) VALUES (:contestantID, :FirstName, :LastName, :Tel, :Email)";
+            $statement = $db->prepare($query);
+            $statement->bindValue(':contestantID', $contestantID);
+            $statement->bindValue(':FirstName', $FirstName);
+            $statement->bindValue(':LastName', $LastName);
+            $statement->bindValue(':Email', $Email);
+            $statement->bindValue(':Tel', $Tel);
+            $statement->execute();
+            $statement->closeCursor();
+            return true;
+        }
+    }
+
+    function modifyContestant($contestantID,$Email,$FirstName,$LastName,$Tel) {
+        // Registers a new contestant
+        global $db;
+        $query = "UPDATE Contestant SET FirstName=:FirstName, LastName=:LastName, Tel=:Tel, Email=:Email WHERE ContestantID=:contestantID";
+		$statement = $db->prepare($query);
+        $statement->bindValue(':contestantID', $contestantID);
+        $statement->bindValue(':FirstName', $FirstName);
+        $statement->bindValue(':LastName', $LastName);
+        $statement->bindValue(':Email', $Email);
+        $statement->bindValue(':Tel', $Tel);
+		$statement->execute();
+		$statement->closeCursor();
+        return true;
+    }
+
+    function deleteContestant($contestantID) {
+        // Returns an array of contestantID's
+        global $db;
+        $query = "DELETE FROM Contestant WHERE ContestantID=:contestantID";
+		$statement = $db->prepare($query);
+        $statement->bindValue(':contestantID', $contestantID);
+		$statement->execute();
+		$statement->closeCursor();
+    }
+?>
+
+////////////////////////////// model: winners_db.php //////////////////////////
+<?php
+    function getWinners() {
+        // Returns an array of Winners
+        global $db;
+        $query = 'SELECT * FROM Winners';
+        $statement = $db->prepare($query);
+        $statement->execute();
+        $Winners = $statement->fetchAll();
+        $statement->closeCursor();
+        return $Winners;
+    }
+
+    function getWinner($WinnerID) {
+        // Returns a Winner if one exists
+        global $db;
+        $query = 'SELECT * FROM Winners WHERE WinnerID = :WinnerID';
+		$statement = $db->prepare($query);
+        $statement->bindValue(':WinnerID', $WinnerID);
+		$statement->execute();
+		$Winner = $statement->fetch();
+		$statement->closeCursor();
+		return $Winner;
+    }
+
+    function checkWinner($WinnerID,$ContestantID,$CurrentWinYear,$ModifyActive = false) {
+        // Returns a contestant if one exists
+        global $db;
+        $query = 'SELECT * FROM Winners WHERE ContestantID = :contestantID';
+		$statement = $db->prepare($query);
+        $statement->bindValue(':contestantID', $ContestantID);
+		$statement->execute();
+		$Winner = $statement->fetchAll();
+		$statement->closeCursor();
+
+        // Contestant has won before, check if year is valid
+        if (!empty($Winner) && $ModifyActive = false) {
+            $WinnerWinYear = $Winner['WinYear'];
+            if (($CurrentWinYear - $WinnerWinYear) <= 5) {
+                // Still in waiting period
+                //return ("Contestant has won in the past 5 years. Select runner-up" . '<a href="javascript:history.back()">Try again</a>');
+            } else {
+                // Year is valid. Not in waiting period
+                //return Null;
+            }
+        } else if($ModifyActive = true && $WinnerID <> -1) {
+            // Currently in modified mode.
+            // Check if year isnt used by another record other than the current one.
+            global $db;
+            $query = 'SELECT * FROM Winners WHERE (WinYear = :WinYear AND WinnerID <> :WinnerID)';
+            $statement = $db->prepare($query);
+            $statement->bindValue(':WinYear', $CurrentWinYear);
+            $statement->bindValue(':WinnerID', $WinnerID);
+            $statement->execute();
+            $WinYears = $statement->fetchAll();
+            $statement->closeCursor();
+
+            if (count($WinYears) > 0) {
+                return ("Year already used. " . '<a href="javascript:history.back()">Try again</a>');
+            } else {
+                // All good, can take the win
+                return Null;
+            }
+
+        } else {
+            // All good, can take the win
+            return Null;
+        }
+    }
+
+    function checkWinnerYear($WinYear) {
+        // Returns a contestant if year exists
+        global $db;
+        $query = 'SELECT * FROM Winners WHERE WinYear = :WinYear';
+		$statement = $db->prepare($query);
+        $statement->bindValue(':WinYear', $WinYear);
+		$statement->execute();
+		$Winner = $statement->fetch();
+		$statement->closeCursor();
+		return $Winner;
+    }
+
+    function deleteWinner($WinnerID) {
+        global $db;
+        $query = "DELETE FROM Winners WHERE WinnerID=:WinnerID";
+		$statement = $db->prepare($query);
+        $statement->bindValue(':WinnerID', $WinnerID);
+		$statement->execute();
+		$statement->closeCursor();
+    }
+
+    function getWinnerMaxID() {
+        global $db;
+        $query = "SELECT MAX(WinnerID) AS MaxWinnerID FROM Winners";
+		$statement = $db->prepare($query);
+		$statement->execute();
+        $MaxWinnerID = $statement->fetch();
+        $statement->closeCursor();
+        return ($MaxWinnerID['MaxWinnerID'] + 1);
+    }
+
+    function setWinner($ContestantID,$WinningPoints,$WinYear) {
+        // Add a new Winner
+        global $db;
+
+        // Get new winner id
+        $MaxWinnerID = getWinnerMaxID();
+
+        $query = "INSERT INTO Winners(ContestantID,WinnerID,WinningPoints,WinYear) VALUES (:contestantID, :WinnerID, :WinningPoints, :WinYear)";
+		$statement = $db->prepare($query);
+        $statement->bindValue(':contestantID', $ContestantID);
+        $statement->bindValue(':WinnerID', $MaxWinnerID);
+        $statement->bindValue(':WinningPoints', $WinningPoints);
+        $statement->bindValue(':WinYear', $WinYear);
+		$statement->execute();
+		$statement->closeCursor();
+        return true;
+    }
+
+    function checkUpdatedWinner($WinnerID,$WinYear) {
+        // Check if year already used by another record
+        global $db;
+        $query = "SELECT WinnerID FROM Winners WHERE WinYear = :WinYear";
+		$statement = $db->prepare($query);
+        $statement->bindValue(':WinYear', $WinYear);
+		$statement->execute();
+        $Winners = $statement->fetchAll();
+        $statement->closeCursor();
+
+        if (count($Winners) > 0) {
+            return ("Year already used. " . '<a href="javascript:history.back()">Try again</a>');
+        } else {
+            return true;
+        }
+    }
+    
+    function modifyWinner($WinnerID,$ContestantID,$WinningPoints,$WinYear) {
+        // Add a new Winner
+        global $db;
+        $query = "UPDATE Winners SET ContestantID=:contestantID, WinningPoints=:WinningPoints, WinYear=:WinYear WHERE WinnerID=:WinnerID";
+		$statement = $db->prepare($query);
+        $statement->bindValue(':contestantID', $ContestantID);
+        $statement->bindValue(':WinnerID', $WinnerID);
+        $statement->bindValue(':WinningPoints', $WinningPoints);
+        $statement->bindValue(':WinYear', $WinYear);
+		$statement->execute();
+		$statement->closeCursor();
+        return true;
+    }
+?>
+
+////////////////////////////// model: database.php //////////////////////////
+<?php
+// PDO variables for connection
+	$dsn = 'mysql:host=localhost;dbname=ICT3612_db';
+	$username = 'root';
+	$password = '';
+	
+	// Other global variables
+	$db;
+	
+	// Connect to the database and show appropriate message when either successful or unsuccessful
+	try {
+		$db = new PDO($dsn, $username, $password);  	// Create PDO object
+		echo '<p>You are connected to the database</p>';
+	} catch (PDOException $e) {
+		echo '<p>ERROR: You are NOT connected to the database</p>';
+		exit();
+	}
+?>
+
+////////////////////////////// view: contestant_add.php //////////////////////////
+<?php include('../view/header.php'); ?>
+<main>
+    <h1>Add Contestant</h1>
+    <form action="../controller/index.php" method="post">
+        <input type="hidden" name="action" value="add_contestant" />
+        <br>
+
+        <label>ID Number:</label>
+        <input type="number" name="contestant_id" />
+        <br>
+
+        <label>First name:</label>
+        <input type="text" name="first_name" />
+        <br>
+
+        <label>Last name:</label>
+        <input type="text" name="last_name" />
+        <br>
+
+        <label>Email:</label>
+        <input type="email" name="email" />
+        <br>
+
+        <label>Tel:</label>
+        <input type="tel" name="tel" />
+        <br>
+
+        <label>&nbsp;</label>
+        <input type="submit" name="Add Contestant" />
+        <br>
+    </form>
+    <p>
+        <a href="../controller/index.php?action=list_contestants">View Contestants List</a>
+    </p>
+</main>
+<?php include('../view/footer.php'); ?>
+
+////////////////////////////// view: contestant_list.php //////////////////////////
+<?php include("../view/header.php"); ?>
+<main>
+    <p>
+        <a class="selection" href="?action=show_add_contestant_form">+ Add Contestant</a>
+        <a class="selection" href="?action=show_add_winner_form">+ Add Winner</a>
+        <a class="selection" href="?action=list_contestants">View Contestants</a>
+        <a class="selection" href="?action=list_winners">View Winners</a><br><br>
+    </p>
+    <!-- Display the contestants -->
+    <table>
+        <tr>
+            <th>Contestant ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Email</th>
+            <th>Tel</th>
+            <th></th>
+            <th></th>
+        </tr>
+        <?php foreach ($contestants as $contestant) : ?>
+        <tr>
+            <td><?php echo($contestant['ContestantID']); ?></td>
+            <td><?php echo($contestant['FirstName']); ?></td>
+            <td><?php echo($contestant['LastName']); ?></td>
+            <td><?php echo($contestant['Email']); ?></td>
+            <td><?php echo($contestant['Tel']); ?></td>
+            <td>
+                <form action="." method="post">
+                    <input type="hidden" name="action" value="delete_contestant" />
+                    <input type="hidden" name="contestant_id" value="<?php echo($contestant['ContestantID']); ?>" />
+                    <input type="submit" value="Delete" />
+                </form>
+            </td>
+            <td>
+                <form action="." method="post">
+                    <input type="hidden" name="action" value="modify_contestant" />
+                    <input type="hidden" name="contestant_id" value="<?php echo($contestant['ContestantID']); ?>" />
+                    <input type="submit" value="Modify" />
+                </form>
+            </td>
+        </tr>
+        <?php endforeach; ?>
+    </table><br>
+</main>
+<?php include("../view/footer.php"); ?>
+
+////////////////////////////// view: contestant_modify.php //////////////////////////
+<?php include('../view/header.php'); 
+    $Contestant = getContestant($ContestantID);
+    $FirstName = $Contestant['FirstName'];
+    $LastName = $Contestant['LastName'];
+    $Email = $Contestant['Email'];
+    $Tel = $Contestant['Tel'];
+?>
+<main>
+    <h1>Modify Contestant</h1>
+    <form action="../controller/index.php" method="post">
+        <input type="hidden" name="action" value="modify_contestant_form" />
+        <input type="hidden" name="contestant_id" value="<?php echo($ContestantID); ?>" />
+        <br>
+
+        <label>ID Number:</label>
+        <label><?php echo($ContestantID); ?></label>
+        <br>
+
+        <label>First name:</label>
+        <input type="text" name="first_name" value="<?php echo($FirstName); ?>" />
+        <br>
+
+        <label>Last name:</label>
+        <input type="text" name="last_name" value="<?php echo($LastName); ?>" />
+        <br>
+
+        <label>Email:</label>
+        <input type="email" name="email" value="<?php echo($Email); ?>" />
+        <br>
+
+        <label>Tel:</label>
+        <input type="tel" name="tel" value="<?php echo($Tel); ?>" />
+        <br>
+
+        <label>&nbsp;</label>
+        <input type="submit" name="modify_contestant_form" value="Save" />
+        <br>
+    </form>
+    <p>
+        <a href="../controller/index.php?action=list_contestants">View Contestants List</a>
+    </p>
+</main>
+<?php include('../view/footer.php'); ?>
+
+////////////////////////////// view: winner_add.php //////////////////////////
+<?php include('../view/header.php'); ?>
+<main>
+    <h1>Add Winner</h1>
+    <form action="../controller/index.php" method="post">
+        <input type="hidden" name="action" value="add_winner" />
+        <br>
+
+        <label>Contestant ID Number:</label>
+        <input type="number" name="contestant_id" />
+        <br>
+
+        <label>Win Year:</label>
+        <input type="text" name="win_year" />
+        <br>
+
+        <label>Win points:</label>
+        <input type="number" name="winning_points" />
+        <br>
+
+        <label>&nbsp;</label>
+        <input type="submit" name="Add Winner" />
+        <br>
+    </form>
+    <p>
+        <a href="../controller/index.php?action=list_winners">View Winners List</a>
+    </p>
+</main>
+<?php include('../view/footer.php'); ?>
+
+////////////////////////////// view: winner_modify.php //////////////////////////
+<?php include('../view/header.php'); 
+    $Winner = getWinner($WinnerID);
+    $ContestantID = $Winner['ContestantID'];
+    $WinYear = $Winner['WinYear'];
+    $WinningPoints = $Winner['WinningPoints'];
+?>
+<main>
+    <h1>Modify Winner</h1>
+    <form action="../controller/index.php" method="post">
+        <input type="hidden" name="action" value="modify_winner_form" />
+        <input type="hidden" name="winner_id" value="<?php echo($WinnerID); ?>" />
+        <br>
+
+        <label>ID Number:</label>
+        <label><?php echo($WinnerID); ?></label>
+        <br>
+
+        <label>Contestant ID number:</label>
+        <input type="number" name="contestant_id" value="<?php echo($ContestantID); ?>" />
+        <br>
+
+        <label>Win Year:</label>
+        <input type="number" name="win_year" value="<?php echo($WinYear); ?>" />
+        <br>
+
+        <label>Winning points:</label>
+        <input type="number" name="winning_points" value="<?php echo($WinningPoints); ?>" />
+        <br>
+
+        <label>&nbsp;</label>
+        <input type="submit" name="modify_winner_form" value="Save" />
+        <br>
+    </form>
+    <p>
+        <a href="../controller/index.php?action=list_winners">View Winners List</a>
+    </p>
+</main>
+<?php include('../view/footer.php'); ?>
+
+////////////////////////////// view: winner_list.php //////////////////////////
+<?php include("../view/header.php"); ?>
+<main>
+    <p>
+        <a class="selection" href="?action=show_add_contestant_form">+ Add Contestant</a>
+        <a class="selection" href="?action=show_add_winner_form">+ Add Winner</a>
+        <a class="selection" href="?action=list_contestants">View Contestants</a>
+        <a class="selection" href="?action=list_winners">View Winners</a><br><br>
+    </p>
+    <!-- Display the contestants -->
+    <table>
+        <tr>
+            <th>Winner ID</th>
+            <th>Contestant ID</th>
+            <th>Win Year</th>
+            <th>Points</th>
+            <th></th>
+            <th></th>
+        </tr>
+        <?php foreach ($Winners as $Winner) : ?>
+        <tr>
+            <td><?php echo($Winner['WinnerID']); ?></td>
+            <td><?php echo($Winner['ContestantID']); ?></td>
+            <td><?php echo($Winner['WinYear']); ?></td>
+            <td><?php echo($Winner['WinningPoints']); ?></td>
+            <td>
+                <form action="." method="post">
+                    <input type="hidden" name="action" value="delete_winner" />
+                    <input type="hidden" name="winner_id" value="<?php echo($Winner['WinnerID']); ?>" />
+                    <input type="submit" value="Delete" />
+                </form>
+            </td>
+            <td>
+                <form action="." method="post">
+                    <input type="hidden" name="action" value="modify_winner" />
+                    <input type="hidden" name="winner_id" value="<?php echo($Winner['WinnerID']); ?>" />
+                    <input type="submit" value="Modify" />
+                </form>
+            </td>
+        </tr>
+        <?php endforeach; ?>
+    </table><br>
+</main>
+<?php include("../view/footer.php"); ?>
+
+////////////////////////////// view: header.php //////////////////////////
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Task 9</title>
+	</head>
+	
+	<body>
+		<?php include '../view/task9menu.inc'; ?>
+		<header>
+            <h1>Witsand Kayak Fishing Competition</h1>
+        </header>
+
+////////////////////////////// view: footer.php //////////////////////////
+        <footer>
+            <iframe src="../task9.txt" height="400" scrolling="yes" width="1200px">
+                <p>Your browser does not support iframes.</p>
+            </iframe>
+        </footer>
+	</body>
+</html>

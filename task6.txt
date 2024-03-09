@@ -1,0 +1,349 @@
+<?php
+	// PDO variables for connection
+	$dsn = 'mysql:host=localhost;dbname=ICT3612_db';
+	$username = 'root';
+	$password = '';
+	
+	// Other global variables
+	$db;
+	
+	// Connect to the database and show appropriate message when either successful or unsuccessful
+	try {
+		$db = new PDO($dsn, $username, $password);  	// Create PDO object
+		echo '<p>You are connected to the database</p>';
+	} catch (PDOException $e) {
+		echo '<p>ERROR: You are NOT connected to the database</p>';
+		exit();
+	}
+
+	// Function: Extracts all the rows from the database table, Actors
+	function getActors($db) {
+		$query = 'SELECT * FROM actors';
+		$statement = $db->prepare($query);
+		$statement->execute();
+		$actors = $statement->fetchAll();
+		$statement->closeCursor();
+		return $actors;
+	}
+
+	// Function: Extracts all the rows from the database table, RoleTypes
+	function getRoleTypes($db) {
+		$query = 'SELECT * FROM roletypes';
+		$statement = $db->prepare($query);
+		$statement->execute();
+		$roleTypes = $statement->fetchAll();
+		$statement->closeCursor();
+		return $roleTypes;
+	}
+
+	// Function: Extracts all the rows from the database table, FilmActorRoles
+	function getFilmActorRoles($db) {
+		$query = 'SELECT * FROM FilmActorRoles';
+		$statement = $db->prepare($query);
+		$statement->execute();
+		$filmActorRoles = $statement->fetchAll();
+		$statement->closeCursor();
+		return $filmActorRoles;
+	}
+
+	// Function: Extracts all the rows from the database table, FilmTitles
+	function getFilmTitles($db) {
+		$query = 'SELECT * FROM FilmTitles';
+		$statement = $db->prepare($query);
+		$statement->execute();
+		$filmTitles = $statement->fetchAll();
+		$statement->closeCursor();
+		return $filmTitles;
+	}
+	
+	// Initiate Actors
+	$actors = getActors($db);
+	// Initiate RoleTypes
+	$roleTypes = getRoleTypes($db);
+	// Initiate FilmActorRoles
+	$filmActorRoles = getFilmActorRoles($db);
+	// Initiate FilmTitles
+	$filmTitles = getFilmTitles($db);
+
+	// Check if query to run then run relevant function query
+	function runQuery($db) {
+		
+	}
+
+	// Run Query 1
+	function query_1($db) {
+		// 1) The first SELECT query must make use of the ORDER BY clause
+		$query = 'SELECT * FROM FilmTitles ORDER BY FilmTitle';
+		$statement = $db->prepare($query);
+		$statement->execute();
+		$filmTitles = $statement->fetchAll();
+		$statement->closeCursor();
+		return $filmTitles;
+	}
+
+	// Run Query 2
+	function query_2($db) {
+		// 2) The second SELECT query must make use of the LIKE operator
+		// Actors selected with LIKE who have 'i' in any position
+		$query = "SELECT * FROM Actors WHERE ActorFullName LIKE '%i%'";
+		$statement = $db->prepare($query);
+		$statement->execute();
+		$actors = $statement->fetchAll();
+		$statement->closeCursor();
+		return $actors;
+	}
+
+	// Run Query 3
+	function query_3($db) {
+		// 3) The third SELECT query must make use of an inner join that joins two tables
+		$query = "SELECT Actors.ActorID AS ActorID, Actors.ActorFullName AS ActorFullName FROM Actors INNER JOIN FilmActorRoles ON Actors.ActorID = FilmActorRoles.ActorID WHERE Actors.ActorID = 10100";
+		$statement = $db->prepare($query);
+		$statement->execute();
+		$actor = $statement->fetchAll();
+		$statement->closeCursor();
+		return $actor;
+	}
+
+	// Run Query 4
+	function query_4($db) {
+		// 4) The fourth SELECT query must make use of a WHERE clause with the OR logical operator
+		$query = "SELECT * FROM RoleTypes WHERE RoleTypeID = 106 OR RoleType LIKE 'a%'";
+		$statement = $db->prepare($query);
+		$statement->execute();
+		$roleType = $statement->fetchAll();
+		$statement->closeCursor();
+		return $roleType;
+	}
+
+	// Run Query 5
+	function query_5($db) {
+		// 5) The fifth SELECT query must make use of the aggregate function MAX
+		$query = "SELECT MAX(FilmTitleID), CharacterName, CharacterDescription FROM FilmActorRoles";
+		$statement = $db->prepare($query);
+		$statement->execute();
+		$filmActorRoles = $statement->fetchAll();
+		$statement->closeCursor();
+		return $filmActorRoles;
+	}
+?>
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Task 6</title>
+	</head>
+	
+	<body>
+		<?php include 'menu.inc'; ?>
+		<h1>Task 6</h1>
+		<div>
+			<h3>Actors</h3>
+			<table>
+				<tr>
+					<th>ActorID</th>
+					<th>ActorFullName</th>
+					<th>ActorNotes</th>
+				</tr>
+				<?php foreach ($actors as $actor) : ?>
+				<tr>
+					<td><?php echo $actor['ActorID']; ?></td>
+					<td><?php echo $actor['ActorFullName']; ?></td>
+					<td><?php echo $actor['ActorNotes']; ?></td>
+				</tr>
+				<?php endforeach; ?>
+			</table>
+		</div>
+		<p></p>
+		<div>
+			<h3>RoleTypes</h3>
+			<table>
+				<tr>
+					<th>RoleTypeID</th>
+					<th>RoleType</th>
+				</tr>
+				<?php foreach ($roleTypes as $roleType) : ?>
+				<tr>
+					<td><?php echo $roleType['RoleTypeID']; ?></td>
+					<td><?php echo $roleType['RoleType']; ?></td>
+				</tr>
+				<?php endforeach; ?>
+			</table>
+		</div>
+		<p></p>
+		<div>
+			<h3>FilmActorRoles</h3>
+			<table>
+				<tr>
+					<th>FilmTitleID</th>
+					<th>ActorID</th>
+					<th>RoleTypeID</th>
+					<th>CharacterName</th>
+					<th>CharacterDescription</th>
+				</tr>
+				<?php foreach ($filmActorRoles as $filmActorRole) : ?>
+				<tr>
+					<td><?php echo $filmActorRole['FilmTitleID']; ?></td>
+					<td><?php echo $filmActorRole['ActorID']; ?></td>
+					<td><?php echo $filmActorRole['RoleTypeID']; ?></td>
+					<td><?php echo $filmActorRole['CharacterName']; ?></td>
+					<td><?php echo $filmActorRole['CharacterDescription']; ?></td>
+				</tr>
+				<?php endforeach; ?>
+			</table>
+		</div>
+		<p></p>
+		<div>
+			<h3>FilmTitles</h3>
+			<table>
+				<tr>
+					<th>FilmTitleID</th>
+					<th>FilmTitle</th>
+					<th>FilmDuration</th>
+					<th>FilmStory</th>
+				</tr>
+				<?php foreach ($filmTitles as $filmTitle) : ?>
+				<tr>
+					<td><?php echo $filmTitle['FilmTitleID']; ?></td>
+					<td><?php echo $filmTitle['FilmTitle']; ?></td>
+					<td><?php echo $filmTitle['FilmDuration']; ?></td>
+					<td><?php echo $filmTitle['FilmStory']; ?></td>
+				</tr>
+				<?php endforeach; ?>
+			</table>
+		</div>
+		<div>
+			<br><br>
+			<form action="/ICT3612_Ass3/task6.php" method="get">
+				<label for="details">Select a query to run:</label><br>
+
+				<input type="radio" id="qry_1" name="query" value="qry_1">
+				<label for="qry_1">Query 1</label><br>
+
+				<input type="radio" id="qry_2" name="query" value="qry_2">
+				<label for="qry_2">Query 2</label><br>
+
+				<input type="radio" id="qry_3" name="query" value="qry_3">
+				<label for="qry_3">Query 3</label><br>
+
+				<input type="radio" id="qry_4" name="query" value="qry_4">
+				<label for="qry_4">Query 4</label><br>
+
+				<input type="radio" id="qry_5" name="query" value="qry_5">
+				<label for="qry_5">Query 5</label><br><br>
+
+				<input type="submit" value="Submit">
+			</form>
+		</div>
+		
+		<! -- Check if a radio button was selected and submitted -->
+		<?php if(isset($_GET['query'])): ?>
+			<! -- Get the result of the radio button -->
+			<?php $radioResult = $_GET['query']; ?>
+
+			<! -- If the result of the radio button is qry_1, run corresponding function -->
+			<?php if($radioResult == "qry_1"): ?>
+				<p><strong>Query 1 selected: ORDER BY clause</strong><br></p>
+				<?php $qry_1Results = query_1($db) ?>
+				<h3>Query 1: FilmTitles ordered by FilmTitle</h3>
+				<table>
+					<tr>
+						<th>FilmTitleID</th>
+						<th>FilmTitle</th>
+						<th>FilmDuration</th>
+						<th>FilmStory</th>
+					</tr>
+					<?php foreach ($qry_1Results as $qry_1Result) : ?>
+					<tr>
+						<td><?php echo $qry_1Result['FilmTitleID']; ?></td>
+						<td><?php echo $qry_1Result['FilmTitle']; ?></td>
+						<td><?php echo $qry_1Result['FilmDuration']; ?></td>
+						<td><?php echo $qry_1Result['FilmStory']; ?></td>
+					</tr>
+					<?php endforeach; ?>
+				</table>
+			<?php endif; ?>
+
+			<! -- If the result of the radio button is qry_2, run corresponding function -->
+			<?php if($radioResult == "qry_2"): ?>
+				<p><strong>Query 2 selected: LIKE operator</strong><br></p>
+				<?php $qry_2Results = query_2($db) ?>
+				<h3>Query 2: Actors selected with LIKE who have 'i' in any position in ActorFullName</h3>
+				<table>
+					<tr>
+						<th>ActorID</th>
+						<th>ActorFullName</th>
+						<th>ActorNotes</th>
+					</tr>
+					<?php foreach ($qry_2Results as $qry_2Result) : ?>
+					<tr>
+						<td><?php echo $qry_2Result['ActorID']; ?></td>
+						<td><?php echo $qry_2Result['ActorFullName']; ?></td>
+						<td><?php echo $qry_2Result['ActorNotes']; ?></td>
+					</tr>
+					<?php endforeach; ?>
+				</table>
+			<?php endif; ?>
+
+			<! -- If the result of the radio button is qry_3, run corresponding function -->
+			<?php if($radioResult == "qry_3"): ?>
+				<p><strong>Query 3 selected: inner join that joins two tables</strong><br></p>
+				<?php $qry_3Results = query_3($db) ?>
+				<h3>Query 3: Actor selected from Actors and FilmActorRoles tables with INNER JOIN where ActorID = 10100</h3>
+				<table>
+					<tr>
+						<th>ActorID</th>
+						<th>ActorFullName</th>
+					</tr>
+					<?php foreach ($qry_3Results as $qry_3Result) : ?>
+						<tr>
+							<td><?php echo $qry_3Result['ActorID']; ?></td>
+							<td><?php echo $qry_3Result['ActorFullName']; ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</table>
+			<?php endif; ?>
+
+			<! -- If the result of the radio button is qry_4, run corresponding function -->
+			<?php if($radioResult == "qry_4"): ?>
+				<p><strong>Query 4 selected: WHERE clause with the OR logical operator</strong><br></p>
+				<?php $qry_4Results = query_4($db) ?>
+				<h3>RoleTypes WHERE RoleTypeID = 106 OR RoleType starts with an a</h3>
+				<table>
+					<tr>
+						<th>RoleTypeID</th>
+						<th>RoleType</th>
+					</tr>
+					<?php foreach ($qry_4Results as $qry_4Result) : ?>
+					<tr>
+						<td><?php echo $qry_4Result['RoleTypeID']; ?></td>
+						<td><?php echo $qry_4Result['RoleType']; ?></td>
+					</tr>
+					<?php endforeach; ?>
+				</table>
+			<?php endif; ?>
+
+			<! -- If the result of the radio button is qry_5, run corresponding function -->
+			<?php if($radioResult == "qry_5"): ?>
+				<p><strong>Query 5 selected: aggregate function MAX</strong><br></p>
+				<?php $qry_5Results = query_5($db) ?>
+				<h3>FilmActorRoles SELECT MAX(FilmTitleID)</h3>
+				<table>
+					<tr>
+						<th>FilmTitleID</th>
+						<th>CharacterName</th>
+						<th>CharacterDescription</th>
+					</tr>
+					<?php foreach ($qry_5Results as $qry_5Result) : ?>
+					<tr>
+						<td><?php echo $qry_5Result['MAX(FilmTitleID)']; ?></td>
+						<td><?php echo $qry_5Result['CharacterName']; ?></td>
+						<td><?php echo $qry_5Result['CharacterDescription']; ?></td>
+					</tr>
+					<?php endforeach; ?>
+				</table>		
+			<?php endif; ?>
+		<?php endif; ?>
+		<iframe src="task6.txt" height="400" scrolling="yes" width="1200px">
+			<p>Your browser does not support iframes.</p>
+		</iframe>
+	</body>
+</html>
